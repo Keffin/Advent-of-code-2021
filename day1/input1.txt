@@ -1,4 +1,4 @@
-const l = `109
+109
 117
 118
 98
@@ -1998,29 +1998,3 @@ const l = `109
 6293
 6297
 6308
-`;
-
-// Part 1:
-let nums = l.split("\n");
-let c = 0;
-
-for (let i = 0; i < nums.length - 1; ++i) {
-  if (nums[i] < nums[i + 1]) {
-    c++;
-  }
-}
-console.log(c);
-
-// Part 2:
-let nums2 = l.split("\n");
-let k = 0;
-
-for (let i = 0; i < nums2.length - 2; ++i) {
-  if (
-    nums2[i] + nums2[i + 1] + nums2[i + 2] >
-    nums2[i] + nums[i - 1] + nums[i + 1]
-  ) {
-    k++;
-  }
-}
-console.log(k);
