@@ -1,9 +1,10 @@
 import { readFileSync } from "fs";
-import { exit } from "process";
+
 
 const input = readFileSync("./input.txt", "utf-8");
 const lines = input.trim().split("\n");
 
+// Part 1
 let g = "";
 let e = "";
 
@@ -26,18 +27,6 @@ for (let i = 0; i < lines[0].length; i++) {
 
 console.log(parseInt(g, 2) * parseInt(e, 2));
 
-const test = `00100
-11110
-10110
-10111
-10101
-01111
-00111
-11100
-10000
-11001
-00010
-01010`;
 
 // keep only numbers selected by bit criteria for type of rating value for which you are searching. Discartd numbers yhat do not match bit crieria
 // if only one number left, stop. this is the rating value for which you are searching
@@ -53,16 +42,45 @@ const test = `00100
 // Determine the least common value (0 or 1) in the current bit position. And keep only numbers with that bit in that position.
 // If 0 and 1 are equally common keep values with a 0 in the position being considered.
 
-let oxyList: Array<string> = test.split("\n");
 
-const test2 = test.split("\n");
-let zeroCountOxy = 0;
-let oneCountOxy = 0;
 
-for (let i = 0; i < test2[0].length; i++) {
-  for (let j = 0; j < test2.length; j++) {
-    if (test2[j][i] === "1") zeroCountOxy++;
-    else oneCountOxy++;
+
+function solver(isMostCommon: boolean): any{
+  let iteration = lines; 
+  for (let i = 0; i < lines[0].length; i++){
+    let numberOfOccurrences: {[key: string]: any[]} = {"zero": [], "one": []}; 
+    for (let j = 0; j < iteration.length; j++){
+      let currBit = iteration[j][i];
+      if (currBit === "0"){
+        currBit = "zero"; 
+      }
+      else {
+        currBit = "one";
+      }
+      numberOfOccurrences[currBit].push(iteration[j]);
+    }
+
+    if (iteration.length === 1) return iteration; 
+
+    let zeroBitOcc = true; 
+
+    if (numberOfOccurrences["zero"].length > numberOfOccurrences["one"].length){
+      zeroBitOcc = true; 
+    }
+    else {
+      zeroBitOcc = false; 
+    }
+
+    if (isMostCommon){
+      iteration = zeroBitOcc ? numberOfOccurrences["zero"] : numberOfOccurrences["one"]; 
+    }
+    else {
+      iteration = zeroBitOcc ? numberOfOccurrences["one"] : numberOfOccurrences["zero"]; 
+    }
   }
+  return iteration; 
 }
-console.log(zeroCountOxy, oneCountOxy);
+
+console.log(parseInt(solver(true), 2));
+console.log(parseInt(solver(false), 2));
+console.log(parseInt(solver(true), 2)*parseInt(solver(false), 2));
