@@ -1,32 +1,8 @@
+import { table } from "console";
 import { readFileSync } from "fs";
 
-//const input = readFileSync("./input.txt", "utf-8");
-//const lines = input.trim().split("\n");
-
-const input = `7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
-
-22 13 17 11  0
- 8  2 23  4 24
-21  9 14 16  7
- 6 10  3 18  5
- 1 12 20 15 19
-
- 3 15  0  2 22
- 9 18 13 17  5
-19  8  7 25 23
-20 11 10 24  4
-14 21 16 12  6
-
-14 21 17 24  4
-10 16 15  9 19
-18  8 23 26 20
-22 11 13  6  5
- 2  0 12  3  7`;
-
+const input = readFileSync("./input.txt", "utf-8");
 const lines = input.trim().split("\n");
-//console.log(lines);
-
-//console.log(lines[2].split(/(\s+)/).filter((e) => e.trim().length > 0));
 
 interface BingoCell {
   marked: boolean;
@@ -42,152 +18,191 @@ const makeCell = (x: any): BingoCell => {
 };
 
 for (let i = 2; i < lines.length - 1; i += 6) {
+  let l = [];
   if (lines[i] !== "") {
-    matrixOfMatrixes.push(
+    l.push(
       lines[i]
         .split(/(\s+)/)
         .filter((e) => e.trim().length > 0)
         .map((x) => makeCell(x))
     );
-    matrixOfMatrixes.push(
+    l.push(
       lines[i + 1]
         .split(/(\s+)/)
         .filter((e) => e.trim().length > 0)
         .map((x) => makeCell(x))
     );
-    matrixOfMatrixes.push(
+    l.push(
       lines[i + 2]
         .split(/(\s+)/)
         .filter((e) => e.trim().length > 0)
         .map((x) => makeCell(x))
     );
-    matrixOfMatrixes.push(
+    l.push(
       lines[i + 3]
         .split(/(\s+)/)
         .filter((e) => e.trim().length > 0)
         .map((x) => makeCell(x))
     );
-    matrixOfMatrixes.push(
+    l.push(
       lines[i + 4]
         .split(/(\s+)/)
         .filter((e) => e.trim().length > 0)
         .map((x) => makeCell(x))
     );
+    matrixOfMatrixes.push(l);
   }
 }
 
-function markMatrix(matrix: any[][], markedNum: number) {
-  matrix.forEach((row) => {
-    row.forEach((cell) => {
-      console.log(cell);
-      if (parseInt(cell.value) === markedNum && cell.marked === false) {
-        cell.marked = true;
-      }
-    });
+let OGLen = matrixOfMatrixes.length;
+let matrix2 = [...matrixOfMatrixes];
+
+function markMatrix(matrix: any[][][], markedNum: number) {
+  matrix.forEach((inner) => {
+    inner.forEach((row) =>
+      row.forEach((cell) => {
+        if (parseInt(cell.value) === markedNum && cell.marked === false) {
+          cell.marked = true;
+        }
+      })
+    );
   });
 }
 
-function fiveInARow(matrix: any[][]) {
-  for (const row of matrix) {
-    if (row.every((item) => item.marked)) {
-      return true;
+let winIndex = 0;
+
+function fiveInARow(matrix: any[][][]) {
+  for (const m of matrix) {
+    for (const row of m) {
+      if (row.every((item) => item.marked)) {
+        return { found: true, row: row, rowWin: true, colWin: false };
+      }
     }
   }
-  for (let i = 0; i < matrix[0].length; i++) {
-    const elements = matrix.map((row) => row[i]);
-    if (elements.every((item) => item.marked)) {
-      return true;
+  for (const m of matrix) {
+    for (let i = 0; i < m[0].length; i++) {
+      const elements = m.map((row) => row[i]);
+      if (elements.every((item) => item.marked)) {
+        let winRow: any[] = [];
+        m.map((row) => {
+          winRow.push(row);
+        });
+        return {
+          found: true,
+          row: elements,
+          winTable: winRow,
+          rowWin: false,
+          colWin: true,
+        };
+      }
     }
   }
-  return false;
+
+  return { found: false, row: "undefined" };
 }
+
+let won = false;
+let winningTable: any[] = [];
+let winNum = 0;
 
 for (let i = 0; i < playerNumbers.length; i++) {
   for (let j = 0; j < matrixOfMatrixes.length; j++) {
-    markMatrix(matrixOfMatrixes, playerNumbers[i]);
-    if (fiveInARow(matrixOfMatrixes)) {
+    for (let k = 0; k < matrixOfMatrixes[j].length; k++) {
+      markMatrix(matrixOfMatrixes, playerNumbers[i]);
+      let { found, row, winTable, rowWin, colWin } =
+        fiveInARow(matrixOfMatrixes);
+
+      if (found) {
+        won = true;
+        winNum = playerNumbers[i];
+        //console.log(winTable);
+        if (rowWin) {
+          winningTable = matrixOfMatrixes.find((elem: any[]) => {
+            elem.includes(row);
+          });
+        }
+        if (colWin) {
+          matrixOfMatrixes.forEach((table: any[][]) => {
+            table.forEach((t, index) => {
+              if (t === winTable[index]) {
+                winningTable.push(winTable[index]);
+              }
+            });
+          });
+        }
+        break;
+      }
+    }
+    if (won) {
       break;
     }
+  }
+  if (won) {
     break;
   }
 }
 
-/*playerNumbers.forEach((num) => {
-  for (let i = 0; i < matrixOfMatrixes.length; i++) {
-    markMatrix(matrixOfMatrixes, num);
-    console.log(matrixOfMatrixes);
-    if (fiveInARow(matrixOfMatrixes)) {
-      break;
+let counter = 0;
+winningTable.forEach((item: any) => {
+  item.forEach((i: any) => {
+    if (!i.marked) {
+      counter += parseInt(i.value);
     }
-    /*if (fiveInARow(matrixOfMatrixes)) {
-      console.log("BINGO");
-      break;
-    }
-  }
-});*/
+  });
+});
+console.log(counter * winNum);
 
-/*let c = 0;
-for (let i = 0; i < matrixOfMatrixes.length; i++) {
-  for (let j = 0; j < matrixOfMatrixes[0].length; j++) {
-    if (matrixOfMatrixes[i][j].marked === false) {
-      c += parseInt(matrixOfMatrixes[i][j].value);
-    }
-  }
-}*/
+let won2 = false;
+let winningTable2: any[] = [];
+let winNum2 = 0;
+let index = 0;
+let done = false;
+for (let i = 0; i < playerNumbers.length; i++) {
+  for (let j = 0; j < matrix2.length; j++) {
+    for (let k = 0; k < matrix2[j].length; k++) {
+      markMatrix(matrix2, playerNumbers[i]);
+      let { found, row, winTable, rowWin, colWin } = fiveInARow(matrix2);
 
-/*
-
-
-function run(input: any[], matrix: any[][]) {
-  for (let i = 0; i < input.length; i++) {
-    for (let j = 0; j < matrix.length; j++) {
-      console.log(matrix[i][j]);
-      markMatrix(matrix, i, j);
-      const res = fiveInARow(matrix);
-      if (res) {
-        console.log("BINGO");
-        console.log(input[i], matrix[i][j]);
-      }
-    }
-  }
-}
-
-run(playerNumbers, matrixOfMatrixes);
-//printMatrix(matrixOfMatrixes);
-//console.log(matrixOfMatrixes);
-
-function fiveInARow(matrix: any[][][], i: number, j: number, k: number) {
-  if (
-    matrix[i][j][k].marked &&
-    matrix[i][j][k + 1].marked &&
-    matrix[i][j][k + 2].marked &&
-    matrix[i][j][k + 3].marked &&
-    matrix[i][j][k + 4].marked
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-playerNumbers.forEach((bingoNumber, index) => {
-  for (let i = 0; i < matrixOfMatrixes.length; i++) {
-    for (let j = 0; j < matrixOfMatrixes[i].length; j++) {
-      for (let k = 0; k < matrixOfMatrixes[i][j].length; k++) {
-        if (fiveInARow(matrixOfMatrixes, i, j, k)) {
-          console.log("BINGO");
+      if (found) {
+        won2 = true;
+        winNum2 = playerNumbers[i];
+        //console.log(winTable);
+        if (rowWin) {
+          winningTable2.push(row);
+        }
+        if (colWin) {
+          winningTable2.push(winTable);
+          index++;
+        }
+        if (winningTable2.length === matrix2.length) {
+          done = true;
+          winNum2 = playerNumbers[i];
           break;
         }
-        if (
-          bingoNumber === parseInt(matrixOfMatrixes[i][j][k].value) &&
-          matrixOfMatrixes[i][j][k].marked === false
-        ) {
-          matrixOfMatrixes[i][j][k].marked = true;
-        }
+        break;
       }
-      console.log(matrixOfMatrixes[i][j]);
+      if (done) break;
+    }
+    if (done) break;
+    if (won) {
+      break;
     }
   }
-});
+}
+console.log(winningTable2.length);
+console.log(winningTable2[winningTable2.length - 1]);
 
-//printMatrix(matrixOfMatrixes);*/
+let c = 0;
+winningTable2.forEach((item: any) => {
+  c += i);
+});
+console.log(c * winNum2);
+/*let counter = 0;
+winningTable.forEach((item: any) => {
+  item.forEach((i: any) => {
+    if (!i.marked) {
+      counter += parseInt(i.value);
+    }
+  });
+});
+console.log(counter * winNum);*/
